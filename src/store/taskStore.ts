@@ -1,10 +1,8 @@
 import { create } from 'zustand';
-import { MMKV } from 'react-native-mmkv';
 import { v4 as uuidv4 } from 'uuid';
 import { Task } from '../types/task';
 import { isToday, startOfDay } from 'date-fns';
-
-const storage = new MMKV();
+import { storage } from '../utils/storage';
 
 // Helper function to auto-detect category from task title
 export const detectCategory = (title: string): 'work' | 'personal' | 'urgent' => {
