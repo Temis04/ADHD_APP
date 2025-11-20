@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.darkBg,
   },
   content: {
-    paddingBottom: spacing.xxl,
+    paddingBottom: 100, // Extra padding to clear bottom tabs
   },
   header: {
     alignItems: 'center',

@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.md,
+    paddingBottom: 100, // Extra padding to clear bottom tabs
   },
   emptyState: {
     alignItems: 'center',

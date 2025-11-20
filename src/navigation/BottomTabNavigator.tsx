@@ -19,15 +19,18 @@ export default function BottomTabNavigator() {
           backgroundColor: colors.darkBg,
           borderTopColor: colors.cardBg,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          height: 70,
+          paddingBottom: 12,
           paddingTop: 8,
+          elevation: 0,
+          zIndex: 100,
         },
         tabBarActiveTintColor: colors.purple,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
+          marginBottom: 4,
         },
       }}
     >

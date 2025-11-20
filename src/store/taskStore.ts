@@ -149,58 +149,95 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 }));
 
 // Initialize store with dummy data for testing
-const initializeDummyData = () => {
+const initializeStore = () => {
   const store = useTaskStore.getState();
 
-  // Only add dummy data if no tasks exist
-  if (store.tasks.length === 0) {
-    const now = new Date();
+  // Load tasks from storage first
+  try {
+    const savedTasks = storage.getString('tasks');
+    if (savedTasks) {
+      const parsedTasks = JSON.parse(savedTasks);
+      const tasks = parsedTasks.map((task: any) => ({
+        ...task,
+        createdAt: new Date(task.createdAt),
+        updatedAt: new Date(task.updatedAt),
+        dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+        completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+      }));
 
-    store.addTask({
+      // Set tasks directly without triggering saves
+      useTaskStore.setState({ tasks });
+      return; // Exit if we loaded saved tasks
+    }
+  } catch (error) {
+    console.error('Failed to load tasks:', error);
+  }
+
+  // Only add dummy data if no saved tasks exist
+  const now = new Date();
+  const dummyTasks: Task[] = [
+    {
+      id: uuidv4(),
       title: 'Finish project presentation',
       category: 'work',
       completed: false,
       isTop3: true,
       dueDate: now,
       dueTime: '2:00 PM',
-    });
-
-    store.addTask({
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: uuidv4(),
       title: 'Call dentist ASAP',
       category: 'urgent',
       completed: false,
       isTop3: true,
       dueDate: now,
       dueTime: '10:00 AM',
-    });
-
-    store.addTask({
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: uuidv4(),
       title: 'Buy groceries',
       category: 'personal',
       completed: false,
       isTop3: false,
-    });
-
-    store.addTask({
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: uuidv4(),
       title: 'Team meeting notes',
       category: 'work',
       completed: false,
       isTop3: true,
       dueDate: now,
-    });
-
-    store.addTask({
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: uuidv4(),
       title: 'Walk the dog',
       category: 'personal',
       completed: true,
       completedAt: now,
       isTop3: false,
-    });
-  }
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+
+  // Set all dummy tasks at once
+  useTaskStore.setState({ tasks: dummyTasks });
+  // Save once
+  storage.set('tasks', JSON.stringify(dummyTasks));
 };
 
-// Load tasks from storage on app start
-useTaskStore.getState().loadTasks();
-
-// Initialize dummy data (only if no saved tasks)
-initializeDummyData();
+// Initialize store only once
+let initialized = false;
+if (!initialized) {
+  initializeStore();
+  initialized = true;
+}
