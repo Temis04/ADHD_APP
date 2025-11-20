@@ -71,7 +71,7 @@ export default function HomeScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>TODAY'S TOP 3</Text>
         {top3Tasks.length > 0 ? (
-          <View style={styles.top3Container}>
+          <View>
             {top3Tasks.slice(0, 3).map((task) => (
               <TaskCard key={task.id} task={task} />
             ))}
@@ -89,37 +89,41 @@ export default function HomeScreen() {
       {/* Quick Actions Grid */}
       <View style={styles.section}>
         <View style={styles.quickActionsGrid}>
-          <TouchableOpacity
-            style={styles.quickActionButton}
-            onPress={() => console.log('Start timer pressed')}
-          >
-            <Text style={styles.quickActionEmoji}>⏱️</Text>
-            <Text style={styles.quickActionText}>Start Timer</Text>
-          </TouchableOpacity>
+          <View style={styles.quickActionsRow}>
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => console.log('Start timer pressed')}
+            >
+              <Text style={styles.quickActionEmoji}>⏱️</Text>
+              <Text style={styles.quickActionText}>Start Timer</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.quickActionButton}
-            onPress={() => console.log('All tasks pressed')}
-          >
-            <Text style={styles.quickActionEmoji}>✓</Text>
-            <Text style={styles.quickActionText}>All Tasks</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => console.log('All tasks pressed')}
+            >
+              <Text style={styles.quickActionEmoji}>✓</Text>
+              <Text style={styles.quickActionText}>All Tasks</Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={styles.quickActionButton}
-            onPress={() => console.log('Brain dump pressed')}
-          >
-            <Text style={styles.quickActionEmoji}>📋</Text>
-            <Text style={styles.quickActionText}>Brain Dump</Text>
-          </TouchableOpacity>
+          <View style={styles.quickActionsRow}>
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => console.log('Brain dump pressed')}
+            >
+              <Text style={styles.quickActionEmoji}>📋</Text>
+              <Text style={styles.quickActionText}>Brain Dump</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.quickActionButton}
-            onPress={() => console.log('Focus mode pressed')}
-          >
-            <Text style={styles.quickActionEmoji}>🎯</Text>
-            <Text style={styles.quickActionText}>Focus Mode</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => console.log('Focus mode pressed')}
+            >
+              <Text style={styles.quickActionEmoji}>🎯</Text>
+              <Text style={styles.quickActionText}>Focus Mode</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -214,9 +218,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: spacing.sm,
   },
-  top3Container: {
-    gap: spacing.sm,
-  },
   pickTop3Button: {
     backgroundColor: colors.cardBg,
     borderRadius: 12,
@@ -231,15 +232,18 @@ const styles = StyleSheet.create({
     color: colors.purple,
   },
   quickActionsGrid: {
+    flexDirection: 'column',
+  },
+  quickActionsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
   },
   quickActionButton: {
     backgroundColor: colors.cardBg,
     borderRadius: 12,
     padding: spacing.md,
-    width: '48%',
+    width: '48.5%',
     alignItems: 'center',
     minHeight: 80,
     justifyContent: 'center',
