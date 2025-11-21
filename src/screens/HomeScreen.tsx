@@ -17,14 +17,12 @@ import TaskCard from '../components/TaskCard';
 export default function HomeScreen() {
   const [quickCaptureText, setQuickCaptureText] = useState('');
   const tasks = useTaskStore((state) => state.tasks);
-  const top3Tasks = useTaskStore((state) => state.getTop3Tasks());
 
-  // Get today's incomplete tasks (not top 3)
+  // Calculate derived data directly from tasks
+  const top3Tasks = tasks.filter((task) => task.isTop3 && !task.completed);
   const upNextTasks = tasks.filter(
     (task) => !task.completed && !task.isTop3
   ).slice(0, 5);
-
-  // Get today's completed tasks
   const doneTodayTasks = tasks.filter((task) => task.completed);
 
   return (
