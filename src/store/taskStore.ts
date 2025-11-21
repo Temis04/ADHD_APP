@@ -148,11 +148,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 }));
 
-// Initialize store with dummy data for testing
-const initializeStore = () => {
+// Don't initialize here - let components initialize when ready
+export const initializeTaskStore = () => {
   const store = useTaskStore.getState();
 
-  // Load tasks from storage first
+  // Check if already has tasks
+  if (store.tasks.length > 0) {
+    return; // Already initialized
+  }
+
+  // Try to load from storage
   try {
     const savedTasks = storage.getString('tasks');
     if (savedTasks) {
@@ -165,15 +170,14 @@ const initializeStore = () => {
         completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
       }));
 
-      // Set tasks directly without triggering saves
       useTaskStore.setState({ tasks });
-      return; // Exit if we loaded saved tasks
+      return;
     }
   } catch (error) {
     console.error('Failed to load tasks:', error);
   }
 
-  // Only add dummy data if no saved tasks exist
+  // Create dummy data only if nothing in storage
   const now = new Date();
   const dummyTasks: Task[] = [
     {
@@ -229,22 +233,6 @@ const initializeStore = () => {
     },
   ];
 
-  // Set all dummy tasks at once
   useTaskStore.setState({ tasks: dummyTasks });
-  // Save once
   storage.set('tasks', JSON.stringify(dummyTasks));
 };
-
-// Initialize store only once
-let initialized = false;
-if (!initialized) {
-  // Clear any corrupted data first
-  try {
-    storage.delete('tasks');
-  } catch (e) {
-    // Ignore
-  }
-
-  initializeStore();
-  initialized = true;
-}
