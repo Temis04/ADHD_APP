@@ -4,29 +4,10 @@ import { Task } from '../types/task';
 import { isToday, startOfDay } from 'date-fns';
 import { storage } from '../utils/storage';
 
-// Helper function to auto-detect category from task title
-export const detectCategory = (title: string): 'work' | 'personal' | 'urgent' => {
-  const lowerTitle = title.toLowerCase();
-
-  // Check for urgent keywords
-  const urgentKeywords = ['urgent', 'asap', 'critical', 'emergency', 'immediately', 'now'];
-  if (urgentKeywords.some(keyword => lowerTitle.includes(keyword))) {
-    return 'urgent';
-  }
-
-  // Check for work keywords
-  const workKeywords = ['meeting', 'email', 'call', 'client', 'project', 'deadline', 'report', 'presentation'];
-  if (workKeywords.some(keyword => lowerTitle.includes(keyword))) {
-    return 'work';
-  }
-
-  // Default to personal
-  return 'personal';
-};
-
 interface TaskStore {
   tasks: Task[];
   loading: boolean;
+  initialized: boolean;
 
   // Actions
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -36,13 +17,13 @@ interface TaskStore {
   setTop3Tasks: (taskIds: string[]) => void;
   getTodaysTasks: () => Task[];
   getTop3Tasks: () => Task[];
-  loadTasks: () => void;
-  saveTasks: () => void;
+  initialize: () => void;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
   loading: false,
+  initialized: false,
 
   addTask: (taskData) => {
     const newTask: Task = {
@@ -52,78 +33,97 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       updatedAt: new Date(),
     };
 
-    set((state) => ({
-      tasks: [...state.tasks, newTask],
-    }));
-    get().saveTasks();
+    const newTasks = [...get().tasks, newTask];
+    set({ tasks: newTasks });
+
+    // Save to storage
+    try {
+      storage.set('tasks', JSON.stringify(newTasks));
+    } catch (error) {
+      console.error('Failed to save tasks:', error);
+    }
   },
 
   updateTask: (id, updates) => {
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === id
-          ? { ...task, ...updates, updatedAt: new Date() }
-          : task
-      ),
-    }));
-    get().saveTasks();
+    const newTasks = get().tasks.map((task) =>
+      task.id === id
+        ? { ...task, ...updates, updatedAt: new Date() }
+        : task
+    );
+    set({ tasks: newTasks });
+
+    try {
+      storage.set('tasks', JSON.stringify(newTasks));
+    } catch (error) {
+      console.error('Failed to save tasks:', error);
+    }
   },
 
   deleteTask: (id) => {
-    set((state) => ({
-      tasks: state.tasks.filter((task) => task.id !== id),
-    }));
-    get().saveTasks();
+    const newTasks = get().tasks.filter((task) => task.id !== id);
+    set({ tasks: newTasks });
+
+    try {
+      storage.set('tasks', JSON.stringify(newTasks));
+    } catch (error) {
+      console.error('Failed to save tasks:', error);
+    }
   },
 
   toggleComplete: (id) => {
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              completed: !task.completed,
-              completedAt: !task.completed ? new Date() : undefined,
-              updatedAt: new Date(),
-            }
-          : task
-      ),
-    }));
-    get().saveTasks();
+    const newTasks = get().tasks.map((task) =>
+      task.id === id
+        ? {
+            ...task,
+            completed: !task.completed,
+            completedAt: !task.completed ? new Date() : undefined,
+            updatedAt: new Date(),
+          }
+        : task
+    );
+    set({ tasks: newTasks });
+
+    try {
+      storage.set('tasks', JSON.stringify(newTasks));
+    } catch (error) {
+      console.error('Failed to save tasks:', error);
+    }
   },
 
   setTop3Tasks: (taskIds) => {
-    set((state) => ({
-      tasks: state.tasks.map((task) => ({
-        ...task,
-        isTop3: taskIds.includes(task.id),
-        updatedAt: new Date(),
-      })),
+    const newTasks = get().tasks.map((task) => ({
+      ...task,
+      isTop3: taskIds.includes(task.id),
+      updatedAt: new Date(),
     }));
-    get().saveTasks();
+    set({ tasks: newTasks });
+
+    try {
+      storage.set('tasks', JSON.stringify(newTasks));
+    } catch (error) {
+      console.error('Failed to save tasks:', error);
+    }
   },
 
   getTodaysTasks: () => {
-    const tasks = get().tasks;
-    const today = startOfDay(new Date());
-
-    return tasks.filter((task) => {
+    return get().tasks.filter((task) => {
       if (!task.dueDate) return false;
       return isToday(task.dueDate);
     });
   },
 
   getTop3Tasks: () => {
-    const tasks = get().tasks;
-    return tasks.filter((task) => task.isTop3 && !task.completed);
+    return get().tasks.filter((task) => task.isTop3 && !task.completed);
   },
 
-  loadTasks: () => {
+  initialize: () => {
+    // Only initialize once
+    if (get().initialized) return;
+
     try {
       const savedTasks = storage.getString('tasks');
       if (savedTasks) {
         const parsedTasks = JSON.parse(savedTasks);
-        // Convert date strings back to Date objects
         const tasks = parsedTasks.map((task: any) => ({
           ...task,
           createdAt: new Date(task.createdAt),
@@ -131,108 +131,71 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
           dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
           completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
         }));
-        set({ tasks });
+
+        set({ tasks, initialized: true });
+        return;
       }
     } catch (error) {
       console.error('Failed to load tasks:', error);
     }
-  },
 
-  saveTasks: () => {
-    try {
-      const tasks = get().tasks;
-      storage.set('tasks', JSON.stringify(tasks));
-    } catch (error) {
-      console.error('Failed to save tasks:', error);
-    }
+    // Create dummy data
+    const now = new Date();
+    const dummyTasks: Task[] = [
+      {
+        id: uuidv4(),
+        title: 'Finish project presentation',
+        category: 'work',
+        completed: false,
+        isTop3: true,
+        dueDate: now,
+        dueTime: '2:00 PM',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: uuidv4(),
+        title: 'Call dentist ASAP',
+        category: 'urgent',
+        completed: false,
+        isTop3: true,
+        dueDate: now,
+        dueTime: '10:00 AM',
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: uuidv4(),
+        title: 'Buy groceries',
+        category: 'personal',
+        completed: false,
+        isTop3: false,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: uuidv4(),
+        title: 'Team meeting notes',
+        category: 'work',
+        completed: false,
+        isTop3: true,
+        dueDate: now,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: uuidv4(),
+        title: 'Walk the dog',
+        category: 'personal',
+        completed: true,
+        completedAt: now,
+        isTop3: false,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ];
+
+    set({ tasks: dummyTasks, initialized: true });
+    storage.set('tasks', JSON.stringify(dummyTasks));
   },
 }));
-
-// Don't initialize here - let components initialize when ready
-export const initializeTaskStore = () => {
-  const store = useTaskStore.getState();
-
-  // Check if already has tasks
-  if (store.tasks.length > 0) {
-    return; // Already initialized
-  }
-
-  // Try to load from storage
-  try {
-    const savedTasks = storage.getString('tasks');
-    if (savedTasks) {
-      const parsedTasks = JSON.parse(savedTasks);
-      const tasks = parsedTasks.map((task: any) => ({
-        ...task,
-        createdAt: new Date(task.createdAt),
-        updatedAt: new Date(task.updatedAt),
-        dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-        completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
-      }));
-
-      useTaskStore.setState({ tasks });
-      return;
-    }
-  } catch (error) {
-    console.error('Failed to load tasks:', error);
-  }
-
-  // Create dummy data only if nothing in storage
-  const now = new Date();
-  const dummyTasks: Task[] = [
-    {
-      id: uuidv4(),
-      title: 'Finish project presentation',
-      category: 'work',
-      completed: false,
-      isTop3: true,
-      dueDate: now,
-      dueTime: '2:00 PM',
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: uuidv4(),
-      title: 'Call dentist ASAP',
-      category: 'urgent',
-      completed: false,
-      isTop3: true,
-      dueDate: now,
-      dueTime: '10:00 AM',
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: uuidv4(),
-      title: 'Buy groceries',
-      category: 'personal',
-      completed: false,
-      isTop3: false,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: uuidv4(),
-      title: 'Team meeting notes',
-      category: 'work',
-      completed: false,
-      isTop3: true,
-      dueDate: now,
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: uuidv4(),
-      title: 'Walk the dog',
-      category: 'personal',
-      completed: true,
-      completedAt: now,
-      isTop3: false,
-      createdAt: now,
-      updatedAt: now,
-    },
-  ];
-
-  useTaskStore.setState({ tasks: dummyTasks });
-  storage.set('tasks', JSON.stringify(dummyTasks));
-};
