@@ -238,6 +238,13 @@ const initializeStore = () => {
 // Initialize store only once
 let initialized = false;
 if (!initialized) {
+  // Clear any corrupted data first
+  try {
+    storage.delete('tasks');
+  } catch (e) {
+    // Ignore
+  }
+
   initializeStore();
   initialized = true;
 }

@@ -4,15 +4,18 @@ import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import BottomTabNavigator from './src/navigation/BottomTabNavigator';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <NavigationContainer>
-        <BottomTabNavigator />
-        <StatusBar style="light" />
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={styles.container}>
+        <NavigationContainer>
+          <BottomTabNavigator />
+          <StatusBar style="light" />
+        </NavigationContainer>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 
