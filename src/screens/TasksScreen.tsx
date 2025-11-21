@@ -5,6 +5,7 @@ import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
 import { useTaskStore } from '../store/taskStore';
 import TaskCard from '../components/TaskCard';
+import FloatingButton from '../components/FloatingButton';
 
 export default function TasksScreen() {
   const tasks = useTaskStore((state) => state.tasks);
@@ -35,6 +36,8 @@ export default function TasksScreen() {
           </View>
         )}
       </ScrollView>
+
+      <FloatingButton onPress={() => console.log('Floating button pressed on Tasks')} />
     </View>
   );
 }

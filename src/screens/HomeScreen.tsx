@@ -13,6 +13,7 @@ import { typography } from '../constants/typography';
 import { spacing } from '../constants/spacing';
 import { useTaskStore } from '../store/taskStore';
 import TaskCard from '../components/TaskCard';
+import FloatingButton from '../components/FloatingButton';
 
 export default function HomeScreen() {
   const [quickCaptureText, setQuickCaptureText] = useState('');
@@ -26,7 +27,8 @@ export default function HomeScreen() {
   const doneTodayTasks = tasks.filter((task) => task.completed);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
       {/* Top Bar */}
       <View style={styles.header}>
         <Text style={styles.appName}>ADHD Flow</Text>
@@ -147,6 +149,9 @@ export default function HomeScreen() {
         ))}
       </View>
     </ScrollView>
+
+    <FloatingButton onPress={() => console.log('Floating button pressed')} />
+  </View>
   );
 }
 
@@ -154,6 +159,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.darkBg,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     paddingBottom: 100, // Extra padding to clear bottom tabs
